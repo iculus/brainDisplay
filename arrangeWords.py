@@ -1,4 +1,5 @@
-def splitUpParagraph(workingInstruction, start, lineLength):
+def splitUpParagraph(fileLocation, start, lineLength):
+	workingInstruction = prepareInstructionFile(fileLocation)	
 	Working = True
 	signature = '^'
 	#first break up the instruction at line breaks defined by the user
@@ -27,6 +28,7 @@ def splitUpParagraph(workingInstruction, start, lineLength):
 			
 	#with firstPassList populated, for each list item check for line lengh requirements
 	newLines = []
+	newLinesFormatted = []
 	lineLengthHere = 0
 	exitCondition = False
 	for paragraph in firstPassList:
@@ -52,24 +54,33 @@ def splitUpParagraph(workingInstruction, start, lineLength):
 			if len(finalChunk) > 0:
 				newLinesThisParagraph.append(finalChunk)
 		newLines.append(newLinesThisParagraph)
-			
-		
+	for entry in newLines:
+		if len(entry) > 0:
+			for word in entry:
+				newLinesFormatted.append(word)
+		if len(entry) == 0:
+			newLinesFormatted.append('')
 	
-	return newLines
+	
+	return newLinesFormatted
 
-if __name__ == "__main__":
-	sentenceFile = open('instructions/sentence.mike')
-
+def prepareInstructionFile(fileToOpen):
+	openFile = open(fileToOpen)
 	instructions = []
-	for instruction in sentenceFile:
+	for instruction in openFile:
 		instructions.append(instruction)
 	
 	thisSentence = ''.join(instructions)
-	print thisSentence
 
-	smallerWords = splitUpParagraph(thisSentence, 0, 23)
+	return thisSentence
+	
+
+if __name__ == "__main__":
+	fileLocation = 'instructions/sentence.mike'
+	smallerWords = splitUpParagraph(fileLocation, 0, 23)
+
+	print smallerWords
 
 	for i in smallerWords:
 		print i
-		pass
 

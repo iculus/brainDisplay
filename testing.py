@@ -1,3 +1,5 @@
+''' edit of brittany's file to encorperate the functions contained within arrangeWords.py'''
+
 import pygame
 
 pygame.init()
@@ -27,9 +29,8 @@ CarryOn = True
 #this throws an error when I put a word between everyone and what... (more than 9 characters there??)
 firstInstruction = "these will be more instructions for the task. It is important everyone what they are supposed to do! Click the spacebar to continue."
 secondInstruction = "these will be more instructions for the task. It is important that everyone what they are supposed to do! Click the spacebar to continue"
-print len (firstInstruction)
 
-def putInstructionsOnScreen (theInstructions):
+def putInstructionsOnScreen (theInstructions, centered = False):
 	#section to divide long string of text into smaller single lines
 	import math
 
@@ -37,6 +38,7 @@ def putInstructionsOnScreen (theInstructions):
 	posY = 0
 	position = posX, posY
 
+	'''
 	#find the rounded up answer of how many lines will be required
 	lineLength = 23
 	numberLines = math.ceil(len(theInstructions)/(lineLength*1.0))
@@ -55,15 +57,20 @@ def putInstructionsOnScreen (theInstructions):
 		print newLineBreak
  		words.append( snip[0:endPoint])
 
- 	fontContainer = []
- 	for line in words:
+	print words
+	'''
+	fontContainer = []
+ 	for line in theInstructions:
  		fontContainer.append(myfont.render(line,1,WHITE))
 
  	#print on the screen	
  	screen.fill(BLACK)
 
- 	for line in range(len(fontContainer)):
- 		screen.blit(fontContainer[line],(position[0],position[1]+(line*fontSize)))
+ 	for line,font in enumerate(fontContainer):
+		fontWidth = font.get_width()
+		if centered: offset = (screenWidth-fontWidth)/2
+		if not centered: offset = 0
+ 		screen.blit(fontContainer[line],(offset,position[1]+(line*fontSize)))
 
  	pygame.display.flip()
 
@@ -74,5 +81,12 @@ def putInstructionsOnScreen (theInstructions):
    			if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
    				running = False
 
-putInstructionsOnScreen (firstInstruction)
-putInstructionsOnScreen (secondInstruction)
+import arrangeWords as AW
+fileLocation = 'instructions/sentence.mike'
+smallerWords = AW.splitUpParagraph(fileLocation, 0, 23)
+
+putInstructionsOnScreen (smallerWords, centered = True)
+
+fileLocation = 'instructions/another.brit'
+moreWords = AW.splitUpParagraph(fileLocation, 0, 25)
+putInstructionsOnScreen (moreWords)
