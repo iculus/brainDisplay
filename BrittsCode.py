@@ -18,6 +18,8 @@ import pygame
 import time
 from array import array
 
+fmt = '.4f'
+
 pygame.mixer.pre_init(44100, -16, 1, 1024)
 pygame.mixer.init()
 #pygame.init()
@@ -176,8 +178,9 @@ while blockNum <= maxBlockNum:
 			
 			#format the values
 			didWeSound = changeTheBool(didWeSound)
-			startOfTone = float(format(startOfTone, '.5f'))
-			endOfTone = float(format(endOfTone, '.5f'))
+			startOfTone = float(format(startOfTone, fmt))
+			endOfTone = float(format(endOfTone, fmt))
+			endOfISI = float(format(endOfISI, fmt))
 			
 			#append data
 			DATA_TRIAL_toneParams.append((didWeSound, startOfTone, endOfTone))
@@ -259,10 +262,10 @@ while blockNum <= maxBlockNum:
 		
 		#format the values here	
 		didWeSound = changeTheBool(didWeSound)
-		startOfTone = float(format(startOfTone, '.5f'))
-		endOfTone = float(format(endOfTone, '.5f'))
-		if RT != 'null': RT = float(format(RT, '.5f'))
-		endOfISI = float(format(endOfISI, '.5f'))
+		startOfTone = float(format(startOfTone, fmt))
+		endOfTone = float(format(endOfTone, fmt))
+		if RT != 'null': RT = float(format(RT, fmt))
+		endOfISI = float(format(endOfISI, fmt))
 
 		#save the values here
 		DATA_TRIAL_toneParams.append((didWeSound, startOfTone, endOfTone))
