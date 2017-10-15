@@ -1,6 +1,6 @@
 #set the window resolution and tell it to be full screen
 from psychopy import visual, data, core, event
-import pracThoughtProbes
+#import pracThoughtProbes
 
 def allThoughtProbes(win):
 
