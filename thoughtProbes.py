@@ -4,6 +4,8 @@ import pracThoughtProbes
 
 def allThoughtProbes(win):
 
+	thoughtProbeAnswers = []
+
 	# win = visual.Window (size = [800,600],fullscr = False)
 	#customized marker is a white rectangle
 	bar = visual.Rect (win,width = .01, height = .1, fillColor = 'white')
@@ -97,7 +99,9 @@ def allThoughtProbes(win):
 		if event.getKeys(['escape']):
 			core.quit()
 	#print the response to the first thought probe
-	print ratingScale1.getRating()/100.0
+	ans1 = ratingScale1.getRating()/100.0
+	thoughtProbeAnswers.append(ans1)
+	
 
 	#draw the second thought probe
 	while ratingScale2.noResponse:
@@ -112,7 +116,8 @@ def allThoughtProbes(win):
 		if event.getKeys(['escape']):
 			core.quit()  
 	#print the response to the second thought probe
-	print ratingScale2.getRating()/100.0
+	ans2 = ratingScale2.getRating()/100.0
+	thoughtProbeAnswers.append(ans2)
 
 	#draw the third thought probe
 	while ratingScale3.noResponse:
@@ -127,7 +132,9 @@ def allThoughtProbes(win):
 		if event.getKeys(['escape']):
 			core.quit()
 	#print the response to the third thought probe
-	print ratingScale3.getRating()/100.0
+	ans3 = ratingScale3.getRating()/100.0
+	thoughtProbeAnswers.append(ans3)
+	
 
 	while ratingScale4a.noResponse and ratingScale4b.noResponse:
 		ratingScale4a.draw()
@@ -146,10 +153,20 @@ def allThoughtProbes(win):
 		if event.getKeys(['escape']):
 			core.quit()
 	#print the response to the fourth thought probes
-	print ratingScale4a.getRating()/100.0
-	print ratingScale4b.getRating()/100.0       
+	ans4a = ratingScale4a.getRating()/100.0
+	ans4b = ratingScale4b.getRating()/100.0       
+	thoughtProbeAnswers.append(ans4a)
+	thoughtProbeAnswers.append(ans4b)
+	return thoughtProbeAnswers
 
 	#win.close()
+
+def screenUpdateEscape(responseRX,win):
+	if responseRX == ["space"]:
+		win.flip()
+	elif responseRX == ["escape"]:
+		win.close()
+		core.quit()
 
 def howToDoThis(win):
 
@@ -160,48 +177,24 @@ def howToDoThis(win):
 	Instructions2 = visual.ImageStim(win, screen_2, size = [2,2])
 
 	screen_7 = 'tiffs/StartPracScreen.TIF'
-
 	beginPractice = visual.ImageStim(win, screen_7, size = [2,2])
 
 	Instructions1.draw()
 	win.flip()
 	response = event.waitKeys(keyList = ["space", "escape"])
-	if response == ["space"]:
-		win.flip()
-	elif response == ["escape"]:
-		win.close()
-		core.quit()
+	screenUpdateEscape(response,win)
 
 	Instructions2.draw()
 	win.flip()
 	response = event.waitKeys(keyList = ["space", "escape"])
-	if response == ["space"]:
-		win.flip()
-	elif response == ["escape"]:
-		win.close()
-		core.quit()
+	screenUpdateEscape(response,win)
 
-	pracThoughtProbes.allThoughtProbes(win)	
+	allThoughtProbes(win)	
 
 	beginPractice.draw()
 	win.flip()
 	response = event.waitKeys(keyList = ["space", "escape"])
-	if response == ["space"]:
-		win.flip()
-	elif response == ["escape"]:
-		win.close()
-		core.quit()
-
-def enterSubjectID():
-	# Initial dialog box to collect info on study participant and year
-	study_info = {'Participant':0}
-	study_info_dialog = gui.DlgFromDict(dictionary=study_info, title="SART")
-	if study_info_dialog.OK:
-	    # The code below builds the name for each output file. If you want to change the filenames to start with
-	    # something other than 'SART' you can change the value in the quotes below
-	    output_file_name = 'SART_' + str(study_info['Participant'])
-	else:
-	    core.quit()  # If you click "cancel" instead of "OK", closes program
+	screenUpdateEscape(response,win)
 
 def enterSubjectID2(win):
 	go = True

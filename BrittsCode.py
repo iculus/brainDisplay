@@ -2,13 +2,15 @@
 Presentation for Brittany with recording
 Designed by Brittany Alperin and Mike Soroka
 MIT License, use freely and credit the authors and keep track of changes
-2017-10-05
+2017-10-14
 
 Notes:
 2017-10-05 	- Composed functions to handle keyboard events and sound generation MS
+2017-10-14	- Added save to csv file functionality and enhanced the structure 
 BUG 		- spacebar is measured across event types correctly except rolls into start of new block... IMPORTANT MS
 ODD 		- The data structure is indexed correctly, but an extra fixation datapoint is added at the end of a block
 TODO		- Move the definitions into a library called michoPy 
+BUG		- THE FILENAMES CAN BE OVERWRITTEN IF THE SAME SUBJECT IS ENTERED ****CHANGE THIS****
 '''
 
 from psychopy import visual, core, event
@@ -18,6 +20,7 @@ import pygame
 import time
 from array import array
 import thoughtProbes
+import csv
 
 fmt = '.4f'
 
@@ -103,6 +106,7 @@ def changeTheBool(theBool):
 #set block characteristics
 
 def sart(maxBlockNum, noThreePosition, maxTrialLow, maxTrialHigh, win):
+	answers = []
 	blockNum = 1
 	#set display properties
 	mouse = event.Mouse(visible = False)
@@ -238,30 +242,53 @@ def sart(maxBlockNum, noThreePosition, maxTrialLow, maxTrialHigh, win):
 		DATA_BLOCK_correctness.append(DATA_TRIAL_correctness)
 
 		#place for thought probes
-		thoughtProbes.allThoughtProbes(win)
+		returnedAnswers = thoughtProbes.allThoughtProbes(win)
+		answers.append(returnedAnswers)
 
 		blockNum += 1
-	return DATA_BLOCK_toneParams,DATA_BLOCK_ISI,DATA_BLOCK_RT,DATA_BLOCK_digit,DATA_BLOCK_correctness	
+	return DATA_BLOCK_toneParams,DATA_BLOCK_ISI,DATA_BLOCK_RT,DATA_BLOCK_digit,DATA_BLOCK_correctness,answers
 
-window = visual.Window (size = [800,600],fullscr = False)
-maxBlock = 2
-noThreePos = 1
-maxTLow = 3
-maxTHigh = 4
+""" RUN PROGRAM HERE """
+if __name__ == "__main__": 
+	window = visual.Window (size = [800,600],fullscr = False)
+	maxBlock = 2
+	noThreePos = 1
+	maxTLow = 3
+	maxTHigh = 4
 
-thisName = thoughtProbes.enterSubjectID2(window)
-thoughtProbes.howToDoThis(window)
-toneParams,ISI,RT,digit,correctness = sart(maxBlock,noThreePos,maxTLow,maxTHigh,window)
+	thisName = thoughtProbes.enterSubjectID2(window)
+	thoughtProbes.howToDoThis(window)
+	toneParams,ISI,RT,digit,correctness,ans = sart(maxBlock,noThreePos,maxTLow,maxTHigh,window)
 
-''' PRINT TO SCREEN '''
-for blockNumber,values in enumerate(digit):
-	for trialNumber in range(0,len(values)):
-		print '\t block :', blockNumber \
-			,' trial:', trialNumber \
-			,', digit:', digit[blockNumber][trialNumber] \
-			,', tone :', toneParams[blockNumber][trialNumber] \
-			,', RT :', RT[blockNumber][trialNumber] \
-			,', ISI :', ISI[blockNumber][trialNumber] \
-			,', correct :', correctness[blockNumber][trialNumber]
+	''' PRINT TO SCREEN '''
+	fName = thisName+'_SART.csv'
+	fName2 = thisName+'_PROBES.csv'
+	with open(fName, 'wb') as csvfile:
+		spamwriter = csv.writer(csvfile, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL)
 
-print 'Done'
+		toWrite = ["block","trial","digit","tonePresent","toneStart","toneEnd","RT","ISI","correct"]
+		spamwriter.writerow(toWrite)
+
+		for bn,values in enumerate(digit):
+			for tn in range(0,len(values)):
+				print '\t block :', bn \
+					,' trial:', tn \
+					,', digit:', digit[bn][tn] \
+					,', tone :', toneParams[bn][tn] \
+					,', RT :', RT[bn][tn] \
+					,', ISI :', ISI[bn][tn] \
+					,', correct :', correctness[bn][tn]
+				toWrite = [bn,tn,digit[bn][tn],\
+					toneParams[bn][tn][0],toneParams[bn][tn][1],toneParams[bn][tn][2],\
+					RT[bn][tn],ISI[bn][tn],correctness[bn][tn]]
+				spamwriter.writerow(toWrite)
+	with open(fName2, 'wb') as csvfile2:
+		spamwriter2 = csv.writer(csvfile2, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL)
+
+		toWrite = ["probe1","probe2","probe3","probe4a","probe4b"]
+		spamwriter2.writerow(toWrite)
+		for value in ans:
+			print value
+			spamwriter2.writerow(value)
+
+		print 'Done'
