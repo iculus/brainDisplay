@@ -17,6 +17,7 @@ import random
 import pygame
 import time
 from array import array
+import thoughtProbes
 
 fmt = '.4f'
 
@@ -68,14 +69,14 @@ def playTheSound(startTime, startTone, endTone, sound, toneGo):
 # USEAGE - playTheSound(startTime_,startTone,endTone,sound,toneGo)	#return didWeSoundNow
 # DEFINITION - set the duration and play a sound for it's entirety
 # WONKY - the sound does not begin or end at the right time, it is off by some loading time. Adjust accordingly
-	if tone: 
+	if toneGo: 
 		if time.time()-startTime >= startTone and time.time()-startTime <= endTone:
 			sound.play(-1)
 			print 'toning'
 		else: 
 			pygame.mixer.stop()
 		didWeSoundNow = True
-	if not tone: 
+	if not toneGo: 
 		pygame.mixer.stop()
 		didWeSoundNow = False
 	return didWeSoundNow
@@ -89,7 +90,7 @@ def recordSpaceBar(startTime,maxTime,kpress,RThere):
 		if time.time() - startTime < maxTime:	
 			if kpress == False:	#ensure a single keypress here
 				sendOverPort()
-				RThere = time.time()-startTime_DigitDraw
+				RThere = time.time()-startTime
 				kpress = True
 	return kpress, RThere
 
@@ -99,206 +100,168 @@ def changeTheBool(theBool):
 	return theBool
 
 ''' SET UP VARIABLES '''
-#set display properties
-win = visual.Window (size = [800,600],fullscr = False)
-mouse = event.Mouse(visible = False)
-
-#define the fixation as a plus sign
-fixation= visual.TextStim(win, text = "+", height = .1)
-
 #set block characteristics
-blockNum = 1
-maxBlockNum = 3
 
-thisSound = Note(600)
+def sart(maxBlockNum, noThreePosition, maxTrialLow, maxTrialHigh, win):
+	blockNum = 1
+	#set display properties
+	mouse = event.Mouse(visible = False)
 
-endOfDigit = 0.25
+	#define the fixation as a plus sign
+	fixation= visual.TextStim(win, text = "+", height = .1)
 
+	thisSound = Note(600)
 
-#set up data structure here
-DATA_BLOCK_toneParams = []; DATA_BLOCK_ISI = []; DATA_BLOCK_RT = []; DATA_BLOCK_digit = []; DATA_BLOCK_correctness = []
+	endOfDigit = 0.25
 
-''' START OF PROGRAM ENTER BLOCK ZERO DATA FOR BLOCK '''
-while blockNum <= maxBlockNum:
-	startTime_Block = time.time()	#set up time keeping for block start
-
-	#define the number of trials shortened for testing(23,69), randoms updated every block start
-	maxTrialNumber = random.randrange(5,9)
-	THISTRIAL = True	# to start the trial looper
-	trialNum = 0		
-	
 	#set up data structure here
-	DATA_TRIAL_toneParams = []; DATA_TRIAL_ISI = []; DATA_TRIAL_RT = []; DATA_TRIAL_digit = []; DATA_TRIAL_correctness = []
-	
-	''' ENTER TRIAL ZERO DATA FOR TRIAL '''
-	while THISTRIAL:
-		startTime_Trial = time.time()		#set up timekeeping for trial start
+	DATA_BLOCK_toneParams = []; DATA_BLOCK_ISI = []; DATA_BLOCK_RT = []; DATA_BLOCK_digit = []; DATA_BLOCK_correctness = []
+
+	''' START OF PROGRAM ENTER BLOCK ZERO DATA FOR BLOCK '''
+	while blockNum <= maxBlockNum:
+		startTime_Block = time.time()	#set up time keeping for block start
+
+		#define the number of trials shortened for testing(23,69), randoms updated every block start
+		maxTrialNumber = random.randrange(maxTrialLow,maxTrialHigh)
+		THISTRIAL = True	# to start the trial looper
+		trialNum = 0		
 		
-		#set up music files, randoms are updated ever trial start
-		toneOnset = random.uniform(0.4,0.65)
+		#set up data structure here
+		DATA_TRIAL_toneParams = []; DATA_TRIAL_ISI = []; DATA_TRIAL_RT = []; DATA_TRIAL_digit = []; DATA_TRIAL_correctness = []
+		
+		''' ENTER TRIAL ZERO DATA FOR TRIAL '''
+		while THISTRIAL:
+			startTime_Trial = time.time()		#set up timekeeping for trial start
+			
+			#set up music files, randoms are updated ever trial start
+			toneOnset = random.uniform(0.4,0.65)
 
-		#math for sound, randoms are updated every trial start
-		startOfISI = 0
-		endOfISI = random.uniform(0.9,1.2)
-		startOfTone = startOfISI + toneOnset
-		endOfTone = startOfTone + 0.2
+			#math for sound, randoms are updated every trial start
+			startOfISI = 0
+			endOfISI = random.uniform(0.9,1.2)
+			startOfTone = startOfISI + toneOnset
+			endOfTone = startOfTone + 0.2
 
-		#to check that we are less than 10 trials from the end, randoms are updated every trial start	
-		stimulus = pickANumber(trialNum,maxTrialNumber,1)
-	
-		digit = visual.TextStim (win, stimulus)
+			#to check that we are less than 10 trials from the end, randoms are updated every trial start	
+			stimulus = pickANumber(trialNum,maxTrialNumber,noThreePosition)
+		
+			digit = visual.TextStim (win, stimulus)
 
-		''' FIX FOR FIXATION START '''
-		# Because recording a spacebar event over two timed events sucks
-		if trialNum == 0:
+			''' FIX FOR FIXATION START '''
+			# Because recording a spacebar event over two timed events sucks
+			if trialNum == 0:
+				startTime_FixationDraw = time.time()		#set up timekeeping for fixation draw start
+				tone = toneProb(75,1,100)
+				
+				while time.time()- startTime_FixationDraw <= endOfISI:
+					sendOverPort()
+					fixation.draw()
+					win.flip()
+
+					didWeSound = playTheSound(startTime_FixationDraw,startOfTone,endOfTone,thisSound,tone)	#return didWeSoundNow
+					closeWindowExit()
+				
+				#format the values
+				didWeSound = changeTheBool(didWeSound)
+				startOfTone = float(format(startOfTone, fmt))
+				endOfTone = float(format(endOfTone, fmt))
+				endOfISI = float(format(endOfISI, fmt))
+				
+				#append data
+				DATA_TRIAL_toneParams.append((didWeSound, startOfTone, endOfTone))
+				DATA_TRIAL_ISI.append(endOfISI)
+				
+				
+			''' PRESENT THE DIGIT FOR DIGITDRAW TIME '''	
+			startTime_Keypress = time.time()
+			maxKeypressTime = endOfISI
+			startTime_DigitDraw = time.time()		#set up timekeeping for digit draw start
+			keyPress = False
+			RT = 'null'
+			while time.time() - startTime_DigitDraw < endOfDigit:
+				sendOverPort()
+				digit.draw()
+				win.flip()
+
+				keyPress, RT = recordSpaceBar(startTime_DigitDraw,maxKeypressTime,keyPress,RT)	# returns kpress, rthere
+				closeWindowExit()
+		
+			''' PRESENT THE FIXATION FOR ISI TIME '''	
 			startTime_FixationDraw = time.time()		#set up timekeeping for fixation draw start
 			tone = toneProb(75,1,100)
-			
-			while time.time()- startTime_FixationDraw <= endOfISI:
+				
+			while time.time() - startTime_FixationDraw <= endOfISI:
 				sendOverPort()
 				fixation.draw()
 				win.flip()
-
-				didWeSound = playTheSound(startTime_FixationDraw,startOfTone,endOfTone,thisSound,tone)	#return didWeSoundNow
-				#if tone: 
-				#	if time.time()-startTime_FixationDraw >= startOfTone and time.time()-startTime_FixationDraw <= endOfTone:
-				#		thisSound.play(-1)
-				#		print 'toning'
-				#	else: 
-				#		pygame.mixer.stop()
-				#	didWeSound = True
-				#f not tone: 
-				#	pygame.mixer.stop()
-				#	didWeSound = False
 				
+				keyPress, RT = recordSpaceBar(startTime_DigitDraw,maxKeypressTime,keyPress, RT)	# returns kpress, rthere
+				didWeSound = playTheSound(startTime_FixationDraw,startOfTone,endOfTone,thisSound,tone)	#return didWeSoundNow
 				closeWindowExit()
-				#if event.getKeys(keyList=["escape"]):
-				#	win.close()
-				#	core.quit()
 			
-			#format the values
+			#if they hit it to a 12x456789 it is correct, if they do not hit it it is not correct
+			#if it is a 3 they should do the opposite and they should not hit it, if tey do it's incorrect
+			correct = 'F'
+			if stimulus == 3:
+				if RT == 'null': correct = 'T'
+				else: correct = 'F'
+			else:
+				if RT != 'null': correct = 'T'
+				else: correct = 'F'
+			
+			#format the values here	
 			didWeSound = changeTheBool(didWeSound)
 			startOfTone = float(format(startOfTone, fmt))
 			endOfTone = float(format(endOfTone, fmt))
+			if RT != 'null': RT = float(format(RT, fmt))
 			endOfISI = float(format(endOfISI, fmt))
-			
-			#append data
+
+			#save the values here
 			DATA_TRIAL_toneParams.append((didWeSound, startOfTone, endOfTone))
 			DATA_TRIAL_ISI.append(endOfISI)
-			
-			
-		''' PRESENT THE DIGIT FOR DIGITDRAW TIME '''	
-		startTime_Keypress = time.time()
-		maxKeypressTime = endOfISI
-		startTime_DigitDraw = time.time()		#set up timekeeping for digit draw start
-		keyPress = False
-		RT = 'null'
-		while time.time() - startTime_DigitDraw < endOfDigit:
-			sendOverPort()
-			digit.draw()
-			win.flip()
-
-			keyPress, RT = recordSpaceBar(startTime_DigitDraw,maxKeypressTime,keyPress,RT)	# returns kpress, rthere
-			#if event.getKeys(keyList=["space"]):
-			#	#we know we are within the timelimit, but why not check
-			#	if time.time() - startTime_DigitDraw < maxKeypressTime:	
-			#		if keyPress == False:	#ensure a single keypress here
-			#			sendOverPort()
-			#			RT = time.time()-startTime_DigitDraw
-			#			keyPress = True
-			
+			DATA_TRIAL_RT.append(RT)
+			DATA_TRIAL_digit.append(stimulus)
+			DATA_TRIAL_correctness.append(correct)
+				
+			#exit conditions
+			if trialNum == maxTrialNumber:
+				THISTRIAL = False
 			closeWindowExit()
-			#if event.getKeys(keyList=["escape"]):
-			#	win.close()
-			#	core.quit()
-	
-		''' PRESENT THE FIXATION FOR ISI TIME '''	
-		startTime_FixationDraw = time.time()		#set up timekeeping for fixation draw start
-		tone = toneProb(75,1,100)
 			
-		while time.time() - startTime_FixationDraw <= endOfISI:
-			sendOverPort()
-			fixation.draw()
-			win.flip()
-			
-			keyPress, RT = recordSpaceBar(startTime_DigitDraw,maxKeypressTime,keyPress, RT)	# returns kpress, rthere
-			#if event.getKeys(keyList=["space"]):
-			#	#we know we are within the timelimit, but why not check
-			#	if time.time() - startTime_DigitDraw < maxKeypressTime:	
-			#		if keyPress == False:	#ensure a single keypress here
-			#			sendOverPort()
-			#			RT = time.time()-startTime_DigitDraw
-			#			keyPress = True
+			trialNum += 1
 
-			didWeSound = playTheSound(startTime_FixationDraw,startOfTone,endOfTone,thisSound,tone)	#return didWeSoundNow
-			##code to play a tone for the durration 75% of the time
-			#if tone: 
-			#	if time.time()-startTime_FixationDraw >= startOfTone and time.time()-startTime_FixationDraw <= endOfTone:
-			#		thisSound.play(-1)
-			#		print 'toning'
-			#	else: 
-			#		pygame.mixer.stop()
-			#	didWeSound = True
-			#if not tone: 
-			#	pygame.mixer.stop()
-			#	didWeSound = False
-			
-			closeWindowExit()
-			#if event.getKeys(keyList=["escape"]):
-			#	win.close()
-			#	core.quit()
+		#write all data to block array
+		DATA_BLOCK_toneParams.append(DATA_TRIAL_toneParams)
+		DATA_BLOCK_ISI.append(DATA_TRIAL_ISI)
+		DATA_BLOCK_RT.append(DATA_TRIAL_RT)
+		DATA_BLOCK_digit.append(DATA_TRIAL_digit)
+		DATA_BLOCK_correctness.append(DATA_TRIAL_correctness)
 
-		##write relevant data to trial array	
-		
-		#if they hit it to a 12x456789 it is correct, if they do not hit it it is not correct
-		#if it is a 3 they should do the opposite and they should not hit it, if tey do it's incorrect
-		correct = 'F'
-		if stimulus == 3:
-			if RT == 'null': correct = 'T'
-			else: correct = 'F'
-		else:
-			if RT != 'null': correct = 'T'
-			else: correct = 'F'
-		
-		#format the values here	
-		didWeSound = changeTheBool(didWeSound)
-		startOfTone = float(format(startOfTone, fmt))
-		endOfTone = float(format(endOfTone, fmt))
-		if RT != 'null': RT = float(format(RT, fmt))
-		endOfISI = float(format(endOfISI, fmt))
+		#place for thought probes
+		thoughtProbes.allThoughtProbes(win)
 
-		#save the values here
-		DATA_TRIAL_toneParams.append((didWeSound, startOfTone, endOfTone))
-		DATA_TRIAL_ISI.append(endOfISI)
-		DATA_TRIAL_RT.append(RT)
-		DATA_TRIAL_digit.append(stimulus)
-		DATA_TRIAL_correctness.append(correct)
-			
-		#exit conditions
-		if trialNum == maxTrialNumber:
-			THISTRIAL = False
-		closeWindowExit()
-		#if event.getKeys(keyList=["escape"]):
-		#	win.close()
-		#	core.quit()
-		
-		trialNum += 1
+		blockNum += 1
+	return DATA_BLOCK_toneParams,DATA_BLOCK_ISI,DATA_BLOCK_RT,DATA_BLOCK_digit,DATA_BLOCK_correctness	
 
-	#write all data to block array
-	DATA_BLOCK_toneParams.append(DATA_TRIAL_toneParams)
-	DATA_BLOCK_ISI.append(DATA_TRIAL_ISI)
-	DATA_BLOCK_RT.append(DATA_TRIAL_RT)
-	DATA_BLOCK_digit.append(DATA_TRIAL_digit)
-	DATA_BLOCK_correctness.append(DATA_TRIAL_correctness)
-	blockNum += 1
+window = visual.Window (size = [800,600],fullscr = False)
+maxBlock = 2
+noThreePos = 1
+maxTLow = 3
+maxTHigh = 4
+
+thisName = thoughtProbes.enterSubjectID2(window)
+thoughtProbes.howToDoThis(window)
+toneParams,ISI,RT,digit,correctness = sart(maxBlock,noThreePos,maxTLow,maxTHigh,window)
 
 ''' PRINT TO SCREEN '''
-for blockNumber,values in enumerate(DATA_BLOCK_digit):
+for blockNumber,values in enumerate(digit):
 	for trialNumber in range(0,len(values)):
 		print '\t block :', blockNumber \
 			,' trial:', trialNumber \
-			,', digit:', DATA_BLOCK_digit[blockNumber][trialNumber] \
-			,', tone :', DATA_BLOCK_toneParams[blockNumber][trialNumber] \
-			,', RT :', DATA_BLOCK_RT[blockNumber][trialNumber] \
-			,', ISI :', DATA_BLOCK_ISI[blockNumber][trialNumber] \
-			,', correct :', DATA_BLOCK_correctness[blockNumber][trialNumber]
+			,', digit:', digit[blockNumber][trialNumber] \
+			,', tone :', toneParams[blockNumber][trialNumber] \
+			,', RT :', RT[blockNumber][trialNumber] \
+			,', ISI :', ISI[blockNumber][trialNumber] \
+			,', correct :', correctness[blockNumber][trialNumber]
+
+print 'Done'
